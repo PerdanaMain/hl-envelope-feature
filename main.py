@@ -1,59 +1,118 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+from datetime import datetime, timedelta
 
 
-def hl_envelopes_idx(s, dmin=1, dmax=1, split=False):
+def find_signal_envelopes(signal, chunk_size=1, split_at_mean=False):
     """
-    Input :
-    s: 1d-array, data signal from which to extract high and low envelopes
-    dmin, dmax: int, optional, size of chunks, use this if the size of the input signal is too big
-    split: bool, optional, if True, split the signal in half along its mean, might help to generate the envelope in some cases
-    Output :
-    lmin,lmax : high/low envelope idx of input signal s
+    Find high and low envelopes of a signal.
     """
+    diff_signal = np.diff(np.sign(np.diff(signal)))
+    min_indices = np.nonzero(diff_signal > 0)[0] + 1
+    max_indices = np.nonzero(diff_signal < 0)[0] + 1
 
-    # locals min
-    lmin = (np.diff(np.sign(np.diff(s))) > 0).nonzero()[0] + 1
-    # locals max
-    lmax = (np.diff(np.sign(np.diff(s))) < 0).nonzero()[0] + 1
+    if split_at_mean:
+        signal_mean = np.mean(signal)
+        min_indices = min_indices[signal[min_indices] < signal_mean]
+        max_indices = max_indices[signal[max_indices] > signal_mean]
 
-    if split:
-        # s_mid is zero if s centered around x-axis or more generally mean of signal
-        s_mid = np.mean(s)
-        # pre-sorting of locals min based on relative position with respect to s_mid
-        lmin = lmin[s[lmin] < s_mid]
-        # pre-sorting of local max based on relative position with respect to s_mid
-        lmax = lmax[s[lmax] > s_mid]
-
-    # global min of dmin-chunks of locals min
-    lmin = lmin[
-        [i + np.argmin(s[lmin[i : i + dmin]]) for i in range(0, len(lmin), dmin)]
+    min_indices = min_indices[
+        [
+            i + np.argmin(signal[min_indices[i : i + chunk_size]])
+            for i in range(0, len(min_indices), chunk_size)
+        ]
     ]
-    # global max of dmax-chunks of locals max
-    lmax = lmax[
-        [i + np.argmax(s[lmax[i : i + dmax]]) for i in range(0, len(lmax), dmax)]
+    max_indices = max_indices[
+        [
+            i + np.argmax(signal[max_indices[i : i + chunk_size]])
+            for i in range(0, len(max_indices), chunk_size)
+        ]
     ]
 
-    return lmin, lmax
+    return min_indices, max_indices
+
+
+def generate_datetime_data():
+    """
+    Generate data dari 21 Oktober 2024 sampai hari ini dengan 24 record per hari
+    """
+    start_date = datetime(2024, 10, 21)
+    end_date = datetime(2024, 12, 4)
+
+    datetimes = []
+    signals = []
+
+    current_date = start_date
+    while current_date <= end_date:
+        for hour in range(24):
+            current_datetime = current_date + timedelta(hours=hour)
+            datetimes.append(current_datetime)
+            # Membuat signal yang lebih realistis dengan komponen periodik
+            t = len(signals) / 24  # waktu dalam hari
+            signal_value = 5 + 2 * np.sin(2 * np.pi * t / 7) + np.random.normal(0, 0.5)
+            signals.append(signal_value)
+        current_date += timedelta(days=1)
+
+    return pd.DataFrame({"datetime": datetimes, "signal": signals})
+
+
+def plot_signals_with_envelopes(df):
+    """
+    Plot signal data dengan high dan low envelopes
+    """
+    signal_values = df["signal"].values
+    min_indices, max_indices = find_signal_envelopes(signal_values)
+
+    plt.figure(figsize=(15, 7))
+
+    # Plot signal asli
+    plt.plot(df["datetime"], signal_values, "b-", alpha=0.5, label="Signal")
+
+    # Plot envelopes
+    plt.plot(
+        df["datetime"].iloc[max_indices],
+        signal_values[max_indices],
+        "g.",
+        label="High Envelope",
+        markersize=10,
+    )
+    plt.plot(
+        df["datetime"].iloc[min_indices],
+        signal_values[min_indices],
+        "r.",
+        label="Low Envelope",
+        markersize=10,
+    )
+
+    plt.title("Signal Data dengan High/Low Envelopes (21 Oktober - 4 Desember 2024)")
+    plt.xlabel("Tanggal dan Waktu")
+    plt.ylabel("Nilai Signal")
+    plt.grid(True, alpha=0.3)
+
+    # Format x-axis
+    plt.gcf().autofmt_xdate()
+
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
 
 
 def main():
-    t = np.linspace(0, 2 * np.pi, 100)
-    s = 5 * np.cos(5 * t) * np.exp(-t) + np.random.rand(len(t))
+    # Generate data
+    df = generate_datetime_data()
 
-    print("signal: ", s)
-    print("time: ", t)
+    # Tampilkan informasi data
+    print("Info Dataset:")
+    print(f"Jumlah total record: {len(df)}")
+    print(
+        f"Rentang waktu: {df['datetime'].min().strftime('%Y-%m-%d %H:%M')} sampai {df['datetime'].max().strftime('%Y-%m-%d %H:%M')}"
+    )
+    print("\nStatistik Signal:")
+    print(df["signal"].describe())
 
-    print("time length: ", len(t))
-    print("signal length: ", len(s))
-
-    lmin, lmax = hl_envelopes_idx(s)
-
-    # plot
-    plt.plot(t, s, label="signal")
-    plt.plot(t[lmin], s[lmin], "r", label="low")
-    plt.plot(t[lmax], s[lmax], "g", label="high")
-    plt.show()
+    # Plot signal dengan envelopes
+    plot_signals_with_envelopes(df)
 
 
 if __name__ == "__main__":
