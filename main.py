@@ -1,6 +1,6 @@
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
+import matplotlib.pyplot as plt # type: ignore
+import numpy as np # type: ignore
+import pandas as pd # type: ignore
 from datetime import datetime, timedelta
 
 
@@ -112,7 +112,7 @@ def main():
     print(df["signal"].describe())
 
     # Plot signal dengan envelopes
-    plot_signals_with_envelopes(df)
+    # plot_signals_with_envelopes(df)
 
 
 if __name__ == "__main__":
