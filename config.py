@@ -1,4 +1,5 @@
 import os
+import psycopg2 #type: ignore
 from dotenv import load_dotenv #type: ignore
 
 load_dotenv() # Load environment variables from .env file
@@ -20,4 +21,17 @@ class Config:
   DB_PASS = os.getenv("DB_PASS")
   DB_NAME = os.getenv("DB_NAME")
   DB_PORT = os.getenv("DB_PORT")
+
+  def get_connection():
+    try:
+      conn = psycopg2.connect(
+        host=Config.DB_HOST,
+        user=Config.DB_USER,
+        password=Config.DB_PASS,
+        dbname=Config.DB_NAME,
+        port=Config.DB_PORT
+      )
+      return conn
+    except:
+      print('An exception occurred')
 

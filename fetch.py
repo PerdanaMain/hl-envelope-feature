@@ -3,11 +3,12 @@ from requests.auth import HTTPBasicAuth
 from datetime import datetime, timedelta
 from config import Config
 from format_gmt import format_to_gmt
+from model import *
 import pandas as pd # type: ignore
 import warnings
 import urllib3
 
-def fetch(username, password, host):
+def fetch(username, password, host, web_id):
     """
     Fetch data from PI Web API between 21 October 2024 and current date
     
@@ -41,17 +42,17 @@ def fetch(username, password, host):
             formatted_datetime = current_datetime.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
             
             try:
-                url = f"{host}/streams/F1DPw1kUu10ziUaXEx2rIyo4pARAoAAAS1RKQi1LSTAwLVBJMVxUSkIzLkFCUiBSRUNJUkMgUE1QIEIgTVRSIFNUQVQgV0RHIFRFTVAgVQ/value?time={formatted_datetime}"
+                url = f"{host}/streams/{web_id}/value?time={formatted_datetime}"
                 
 
                 response = session.get(url, auth=auth, verify=False)
                 response.raise_for_status()  # Raise exception for bad status codes
                 
                 response_data = response.json()
-                print(response_data)
+
                 data.append({
                     'datetime': format_to_gmt(response_data['Timestamp'][:19]),
-                    'signal': response_data['Value']
+                    'signal': response_data['Value'] if not isinstance(response_data['Value'], list) else response_data['Value'][0]
                 })
                 
             except requests.exceptions.RequestException as e:
@@ -76,11 +77,11 @@ if __name__ == "__main__":
         password = Config().PIWEB_API_PASS
         url = Config().PIWEB_API_URL
         
-        df = fetch(username, password, url)
-        print("\nDataset Info:")
-        print(f"Total records: {len(df)}")
-        print("\nFirst few records:")
-        print(df)
+        # df = fetch(username, password, url)
+        parts = get_parts()
+
+        for part in parts:
+            data = fetch(username, password, url, part[1])
         
         
     except Exception as e:

@@ -183,6 +183,14 @@ typing = ["typing-extensions"]
 xmp = ["defusedxml"]
 
 [[package]]
+name = "psycopg2-binary"
+version = "2.9.10"
+description = "psycopg2 - Python-PostgreSQL Database Adapter"
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[[package]]
 name = "pyparsing"
 version = "3.2.0"
 description = "pyparsing module - Classes and methods to define and execute parsing grammars"
@@ -274,7 +282,7 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "ec56299168d178b3d2de419a234fd11d0044d402eaf8a75179e313b9dacfbca9"
+content-hash = "743c02754ec0ba75e0c11d9431aa718452c7a93ac99d69f3fdbf536544e09536"
 
 [metadata.files]
 certifi = []
@@ -289,6 +297,7 @@ numpy = []
 packaging = []
 pandas = []
 pillow = []
+psycopg2-binary = []
 pyparsing = []
 python-dateutil = []
 python-dotenv = []

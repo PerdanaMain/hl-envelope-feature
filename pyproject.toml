@@ -12,6 +12,7 @@ matplotlib = "^3.9.3"
 pandas = "^2.2.3"
 python-dotenv = "^1.0.1"
 requests = "^2.32.3"
+psycopg2-binary = "^2.9.10"
 
 
 [build-system]
