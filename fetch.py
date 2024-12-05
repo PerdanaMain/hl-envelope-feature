@@ -106,4 +106,5 @@ def main():
         print(f"Failed to fetch data: {str(e)}")
 
 if __name__ == "__main__":
-    main()
+    # main()
+    pass

@@ -1,6 +1,8 @@
 import uuid
 import pandas as pd  # type: ignore
+import pytz
 from config import Config
+from datetime import datetime
 
 
 def get_parts():
@@ -94,6 +96,58 @@ def create_envelope(data: pd.DataFrame, part_id: str) -> None:
             conn.rollback()
         print(f"Failed to insert envelope data: {e}")
 
+    finally:
+        if conn:
+            cur.close()
+            conn.close()
+
+def save_envelopes_to_db(part_id: str, df: pd.DataFrame, max_indices, features_id):
+    """
+    Menyimpan nilai envelope ke database
+    
+    Args:
+        part_id: ID dari part
+        df: DataFrame dengan data signal
+        max_indices: Array indeks nilai maksimum
+    """
+    conn = None
+    try:
+        conn = Config.get_connection()
+        cur = conn.cursor()
+        now = datetime.now(pytz.timezone("Asia/Jakarta")).strftime("%Y-%m-%d %H:%M:%S")
+        
+        # Siapkan query insert
+        query = """
+            INSERT INTO dl_features_data 
+            (id, features_id, date_time, part_id, value, created_at, updated_at) 
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+        
+        # Siapkan data untuk high envelope
+        high_envelopes = [
+            (
+                str(uuid.uuid4()),
+                features_id,
+                df['datetime'].iloc[idx],
+                part_id,
+                float(df['value'].iloc[idx]),
+                now,
+                now,
+            )
+            for idx in max_indices
+        ]
+        
+        # Insert data
+        cur.executemany(query, high_envelopes)
+        conn.commit()
+        
+        print(f"Successfully saved {len(high_envelopes)} high envelopes  for part {part_id}")
+        
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        print(f"Failed to save envelopes: {str(e)}")
+        raise
     finally:
         if conn:
             cur.close()
