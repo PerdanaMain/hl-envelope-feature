@@ -1,6 +1,7 @@
 import uuid
-import pandas as pd # type: ignore
+import pandas as pd  # type: ignore
 from config import Config
+
 
 def get_parts():
     try:
@@ -13,49 +14,86 @@ def get_parts():
         parts = cur.fetchall()
         return parts
     except Exception as e:
-        print(f'An exception occurred: {e}')
+        print(f"An exception occurred: {e}")
     finally:
         if conn:
             conn.close()
+
+
+def get_part(part_id):
+    try:
+        conn = Config.get_connection()
+        cur = conn.cursor()
+
+        query = "SELECT id, part_name FROM pf_parts WHERE id = %s "
+        cur.execute(query, (part_id,))
+        parts = cur.fetchall()
+        return parts
+    except Exception as e:
+        print(f"An exception occurred: {e}")
+    finally:
+        if conn:
+            conn.close()
+
+
+def get_envelope_values(part_id):
+    conn = None
+    try:
+        conn = Config.get_fetch_connection()
+        cur = conn.cursor()
+
+        query = "SELECT value, created_at as datetime FROM dl_envelope_fetch WHERE part_id = %s ORDER BY created_at ASC"
+        cur.execute(query, (part_id,))
+        parts = cur.fetchall()
+        return parts
+    except Exception as e:
+        print(f"An exception occurred: {e}")
+    finally:
+        if conn:
+            conn.close()
+
 
 def create_envelope(data: pd.DataFrame, part_id: str) -> None:
     conn = None
     try:
         conn = Config.get_fetch_connection()
         cur = conn.cursor()
-        
+
         # Debug print
         print("DataFrame info:")
         print(data.info())
         print("\nFirst row sample:")
         print(data.iloc[0])
-        
+
         # Konversi data ke format yang sesuai
         values = [
             (
-                str(uuid.uuid4()), 
-                part_id, 
+                str(uuid.uuid4()),
+                part_id,
                 float(row.signal),  # Pastikan signal adalah float
-                row.datetime.strftime('%Y-%m-%d %H:%M:%S'),  # Format datetime ke string
-                row.datetime.strftime('%Y-%m-%d %H:%M:%S')   # Format datetime ke string
+                row.datetime.strftime("%Y-%m-%d %H:%M:%S"),  # Format datetime ke string
+                row.datetime.strftime("%Y-%m-%d %H:%M:%S"),  # Format datetime ke string
             )
             for _, row in data.iterrows()
         ]
-        
-        cur.executemany("""
+
+        cur.executemany(
+            """
             INSERT INTO dl_envelope_fetch 
             (id, part_id, value, created_at, updated_at) 
             VALUES (%s, %s, %s, %s, %s)
-        """, values)
+        """,
+            values,
+        )
         conn.commit()
-        
+
         print(f"Successfully inserted {len(values)} records for part {part_id}")
-        
+
     except Exception as e:
         if conn:
             conn.rollback()
-        print(f'Failed to insert envelope data: {e}')
-        
+        print(f"Failed to insert envelope data: {e}")
+
     finally:
         if conn:
             cur.close()

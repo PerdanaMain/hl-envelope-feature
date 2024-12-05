@@ -1,7 +1,8 @@
-import matplotlib.pyplot as plt # type: ignore
-import numpy as np # type: ignore
-import pandas as pd # type: ignore
+import matplotlib.pyplot as plt  # type: ignore
+import numpy as np  # type: ignore
+import pandas as pd  # type: ignore
 from datetime import datetime, timedelta
+from model import *
 
 
 def find_signal_envelopes(signal, chunk_size=1, split_at_mean=False):
@@ -33,35 +34,11 @@ def find_signal_envelopes(signal, chunk_size=1, split_at_mean=False):
     return min_indices, max_indices
 
 
-def generate_datetime_data():
-    """
-    Generate data dari 21 Oktober 2024 sampai hari ini dengan 24 record per hari
-    """
-    start_date = datetime(2024, 10, 21)
-    end_date = datetime(2024, 12, 4)
-
-    datetimes = []
-    signals = []
-
-    current_date = start_date
-    while current_date <= end_date:
-        for hour in range(24):
-            current_datetime = current_date + timedelta(hours=hour)
-            datetimes.append(current_datetime)
-            # Membuat signal yang lebih realistis dengan komponen periodik
-            t = len(signals) / 24  # waktu dalam hari
-            signal_value = 5 + 2 * np.sin(2 * np.pi * t / 7) + np.random.normal(0, 0.5)
-            signals.append(signal_value)
-        current_date += timedelta(days=1)
-
-    return pd.DataFrame({"datetime": datetimes, "signal": signals})
-
-
-def plot_signals_with_envelopes(df):
+def plot_signals_with_envelopes(df, part_name):
     """
     Plot signal data dengan high dan low envelopes
     """
-    signal_values = df["signal"].values
+    signal_values = df["value"].values
     min_indices, max_indices = find_signal_envelopes(signal_values)
 
     plt.figure(figsize=(15, 7))
@@ -73,19 +50,19 @@ def plot_signals_with_envelopes(df):
     plt.plot(
         df["datetime"].iloc[max_indices],
         signal_values[max_indices],
-        "g.",
+        "g-",
         label="High Envelope",
         markersize=10,
     )
     plt.plot(
         df["datetime"].iloc[min_indices],
         signal_values[min_indices],
-        "r.",
+        "r-",
         label="Low Envelope",
         markersize=10,
     )
 
-    plt.title("Signal Data dengan High/Low Envelopes (21 Oktober - 4 Desember 2024)")
+    plt.title(f"Signal Data dengan High/Low Envelopes: {part_name}")
     plt.xlabel("Tanggal dan Waktu")
     plt.ylabel("Nilai Signal")
     plt.grid(True, alpha=0.3)
@@ -100,19 +77,27 @@ def plot_signals_with_envelopes(df):
 
 def main():
     # Generate data
-    df = generate_datetime_data()
+    data = get_envelope_values(part_id="0f6c87be-65a7-480f-8121-f2bcc05ec407")
+    part = get_part(part_id="0f6c87be-65a7-480f-8121-f2bcc05ec407")
+
+    print(part)
+
+    # Tampilkan informasi data
+    if not data:
+        print("No data found")
+        return
+
+    # Convert to DataFrame if not already
+    df = pd.DataFrame(data, columns=["value", "datetime"])
 
     # Tampilkan informasi data
     print("Info Dataset:")
     print(f"Jumlah total record: {len(df)}")
-    print(
-        f"Rentang waktu: {df['datetime'].min().strftime('%Y-%m-%d %H:%M')} sampai {df['datetime'].max().strftime('%Y-%m-%d %H:%M')}"
-    )
-    print("\nStatistik Signal:")
-    print(df["signal"].describe())
+    print(f"5 data teratas:\n{df.head()}")
+    print(f"Rentang waktu: {df['datetime'].min()} sampai {df['datetime'].max()}")
 
     # Plot signal dengan envelopes
-    # plot_signals_with_envelopes(df)
+    plot_signals_with_envelopes(df, part[0][1])
 
 
 if __name__ == "__main__":
