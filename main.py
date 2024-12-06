@@ -5,6 +5,7 @@ from requests.auth import HTTPBasicAuth
 from config import Config
 from model import *
 from log import print_log
+from arima import execute_arima
 import pandas as pd  # type: ignore
 import math
 import requests
@@ -124,6 +125,7 @@ def feature():
 
         print(f"Found {len(max_indices)} maxima")
         save_envelopes_to_db(part[0], df, max_indices, features_id='24c24b32-949b-474e-b500-9232c9f7ab65')
+        execute_arima(part[0], features_id='24c24b32-949b-474e-b500-9232c9f7ab65')
 
 
 def index():

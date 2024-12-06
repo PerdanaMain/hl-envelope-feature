@@ -1,5 +1,6 @@
 from model import *
 from signal_envelope import find_signal_envelopes
+from arima import execute_arima
 import pandas as pd  # type: ignore
 
 def index():
@@ -16,11 +17,11 @@ def index():
             print(f"Found {len(max_indices)} maxima")
 
             save_envelopes_to_db(part[0], df, max_indices, features_id='24c24b32-949b-474e-b500-9232c9f7ab65')
+            execute_arima(part[0], features_id='24c24b32-949b-474e-b500-9232c9f7ab65')
             
     except Exception as e:
         print(f"Failed to fetch data: {str(e)}")
 
 
 if __name__ == '__main__':
-  # index()
-  pass
+  index()

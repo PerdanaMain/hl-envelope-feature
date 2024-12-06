@@ -70,6 +70,77 @@ def get_envelope_values_by_date(part_id, start_date, end_date):
         if conn:
             conn.close()    
 
+def get_feature_values(part_id,features_id):
+    try:
+        conn = Config.get_connection()
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT id, part_id, date_time, value 
+            FROM dl_features_data
+            WHERE part_id = %s AND features_id = %s
+            order by date_time asc
+            """,
+            (part_id, features_id),
+        )
+        values = cur.fetchall()
+        cur.close()
+        conn.close()
+        print("Data fetched successfully, count: ", len(values))
+        return values
+    except Exception as e:
+        print(f"An exception occurred {e}")
+
+def create_predict(part_id, features_id, values, timestamps):
+    try:
+        now = datetime.now(pytz.timezone("Asia/Jakarta")).strftime("%Y-%m-%d %H:%M:%S")
+        conn = Config.get_connection()
+        cur = conn.cursor()
+        
+        # SQL Query
+        sql = """
+        INSERT INTO dl_predict (id, part_id, features_id, date_time, pfi_value, status, created_at, updated_at)
+        VALUES (%s, %s, %s, %s, %s, %s,%s, %s)
+        """
+        
+        # Iterasi dan eksekusi untuk setiap prediksi
+        data_to_insert = []
+        for value, timestamp in zip(values, timestamps):
+            predict_id = str(uuid.uuid4())  # Generate a new UUID for each record
+            value = float(value)
+            data_to_insert.append((predict_id, part_id, features_id, timestamp, value, "normal", now, now))
+        
+        # Execute batch insert
+        cur.executemany(sql, data_to_insert)
+        # Commit perubahan
+        conn.commit()
+    
+    except Exception as e:
+        print(f"An exception occurred: {e}")
+    
+    finally:
+        # Pastikan koneksi ditutup
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+def delete_predicts(part_id, features_id):
+    try:
+        conn = Config.get_connection()
+        cur = conn.cursor()
+        cur.execute(
+            """
+            DELETE FROM dl_predict
+            WHERE part_id = %s AND features_id = %s
+            """,
+            (part_id, features_id),
+        )
+        conn.commit()
+    except Exception as e:
+        print(f"An exception occurred while deleting predicts: {e}")
+
 
 def create_envelope(data: pd.DataFrame, part_id: str) -> None:
     conn = None
