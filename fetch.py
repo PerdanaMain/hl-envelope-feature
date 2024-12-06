@@ -1,48 +1,71 @@
 import math
 import requests
 import pandas as pd # type: ignore
+import time
+import urllib3
 from datetime import datetime, timedelta
 from requests.auth import HTTPBasicAuth
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List, Dict
-import urllib3
+from typing import List, Dict, Optional
 from config import Config
 from format_gmt import format_to_gmt
 from model import get_parts, create_envelope
 
-def fetch_single_value(params: Dict) -> Dict:
-    try:
-        response = params['session'].get(
-            f"{params['host']}/streams/{params['web_id']}/value?time={params['datetime']}", 
-            auth=params['auth'], 
-            verify=False
-        )
-        response.raise_for_status()
-        data = response.json()
-        
-        # Ambil nilai dari Value
-        signal_value = data['Value']
-        
-        # Jika Value adalah dictionary, kita perlu mengakses nilai sebenarnya
-        if isinstance(signal_value, dict):
-            # Sesuaikan key ini dengan struktur response yang sebenarnya
-            signal_value = signal_value.get('Value', 0)  # atau key lain yang sesuai
-        
-        # Konversi ke float dan handle NaN/Inf
-        if isinstance(signal_value, (int, float)) and (math.isnan(signal_value) or math.isinf(signal_value)):
-            signal_value = 0
+
+def fetch_single_value(params: Dict) -> Optional[Dict]:
+    max_retries = 3
+    retry_delay = 2  # seconds
+    
+    for attempt in range(max_retries):
+        try:
+            response = params['session'].get(
+                f"{params['host']}/streams/{params['web_id']}/value?time={params['datetime']}", 
+                auth=params['auth'], 
+                verify=False
+            )
             
-        return {
-            'datetime': pd.to_datetime(format_to_gmt(data['Timestamp'][:19])),
-            'signal': float(signal_value) if signal_value is not None else 0
-        }
-    except Exception as e:
-        print(f"Error fetching {params['datetime']}: {str(e)}")
-        print(f"Full response data: {data}")  # Tambahan debug info
-        return None
+            # Handle rate limiting
+            if response.status_code == 429:
+                if attempt < max_retries - 1:  # Don't sleep on last attempt
+                    time.sleep(retry_delay * (attempt + 1))  # Exponential backoff
+                    continue
+                else:
+                    print(f"Rate limit exceeded after {max_retries} attempts for {params['datetime']}")
+                    return None
+                    
+            response.raise_for_status()
+            data = response.json()
+            
+            # Ambil nilai dari Value
+            signal_value = data.get('Value')
+            
+            # Jika Value adalah dictionary, kita perlu mengakses nilai sebenarnya
+            if isinstance(signal_value, dict):
+                signal_value = signal_value.get('Value', 0)
+            
+            # Konversi ke float dan handle NaN/Inf
+            if isinstance(signal_value, (int, float)) and (math.isnan(signal_value) or math.isinf(signal_value)):
+                signal_value = 0
+                
+            return {
+                'datetime': pd.to_datetime(format_to_gmt(data['Timestamp'][:19])),
+                'signal': float(signal_value) if signal_value is not None else 0
+            }
+            
+        except requests.exceptions.RequestException as e:
+            if attempt < max_retries - 1:
+                print(f"Attempt {attempt + 1} failed for {params['datetime']}: {str(e)}")
+                time.sleep(retry_delay * (attempt + 1))
+                continue
+            print(f"Error fetching {params['datetime']} after {max_retries} attempts: {str(e)}")
+            return None
+            
+        except Exception as e:
+            print(f"Unexpected error for {params['datetime']}: {str(e)}")
+            return None
 
 def fetch(username: str, password: str, host: str, web_id: str) -> pd.DataFrame:
-    """Fetch data from PI Web API between dates"""
+    """Fetch data from PI Web API between dates with rate limiting"""
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     
     # Setup session
@@ -52,7 +75,7 @@ def fetch(username: str, password: str, host: str, web_id: str) -> pd.DataFrame:
     # Generate all timestamps first
     start_date = datetime(2024, 10, 21)
     current_date = datetime.now()
-    end_date = current_date.replace(hour=16, minute=59, second=59, microsecond=999999)
+    end_date = current_date.replace(hour=10, minute=59, second=59, microsecond=999999)
     
     dates = [
         (start_date + timedelta(days=d, hours=h)).strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
@@ -60,7 +83,6 @@ def fetch(username: str, password: str, host: str, web_id: str) -> pd.DataFrame:
         for h in range(24)
         if (start_date + timedelta(days=d, hours=h)) <= end_date
     ]
-    
     
     # Prepare parameters for parallel execution
     params_list = [{
@@ -71,20 +93,29 @@ def fetch(username: str, password: str, host: str, web_id: str) -> pd.DataFrame:
         'datetime': date
     } for date in dates]
     
-    # Fetch data in parallel
+    # Fetch data in parallel with rate limiting
     data = []
-    with ThreadPoolExecutor(max_workers=10) as executor:
+    max_workers = 5  # Reduced from 10 to help prevent rate limiting
+    
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
         future_to_params = {
             executor.submit(fetch_single_value, params): params
             for params in params_list
         }
         
         for future in as_completed(future_to_params):
-            result = future.result()
-            if result:
-                data.append(result)
+            try:
+                result = future.result()
+                if result:
+                    data.append(result)
+            except Exception as e:
+                print(f"Error processing result: {str(e)}")
     
     # Create and process DataFrame
+    if not data:  # Check if data list is empty
+        print("Warning: No data was successfully fetched")
+        return pd.DataFrame(columns=['datetime', 'signal'])
+    
     df = pd.DataFrame(data)
     if not df.empty and not pd.api.types.is_datetime64_any_dtype(df['datetime']):
         df['datetime'] = pd.to_datetime(df['datetime'])
@@ -97,17 +128,27 @@ def main():
         parts = get_parts()
         
         for part in parts:
-            data = fetch(
-                config.PIWEB_API_USER,
-                config.PIWEB_API_PASS,
-                config.PIWEB_API_URL,
-                part[1]
-            )
-            print(f"Fetched {len(data)} records for part {part[3]}")
-            create_envelope(data, part[0])
+            try:
+                data = fetch(
+                    config.PIWEB_API_USER,
+                    config.PIWEB_API_PASS,
+                    config.PIWEB_API_URL,
+                    part[1]
+                )
+                if data.empty:
+                    print(f"No data fetched for part {part[3]}")
+                    continue
+                    
+                print(f"Fetched {len(data)} records for part {part[3]}")
+                create_envelope(data, part[0])
+                
+            except Exception as e:
+                print(f"Failed to process part {part[3]}: {str(e)}")
+                continue
             
     except Exception as e:
-        print(f"Failed to fetch data: {str(e)}")
+        print(f"Failed to initialize: {str(e)}")
+        raise
 
 if __name__ == "__main__":
     main()

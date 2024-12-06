@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta
+from plot import find_signal_envelopes
 from format_gmt import format_to_gmt
 from requests.auth import HTTPBasicAuth
 from config import Config
 from model import *
 from log import print_log
+import pandas as pd  # type: ignore
 import math
 import requests
 import urllib3
@@ -108,15 +110,33 @@ def task():
         print(f"Error executing task: {e}")
         print_log(f"Error executing task: {e}")
 
+def feature():
+    current_timestamp = datetime.now(pytz.timezone('Asia/Jakarta'))
+    past_timestamp = current_timestamp - timedelta(hours=6)
+
+    parts = get_parts()
+
+    for part in parts:
+        data = get_envelope_values_by_date(part[0], start_date=past_timestamp, end_date=current_timestamp)
+        df = pd.DataFrame(data, columns=["value", "datetime"])
+        signal_values = df["value"].values
+        min_indices, max_indices = find_signal_envelopes(signal_values)
+
+        print(f"Found {len(max_indices)} maxima")
+        save_envelopes_to_db(part[0], df, max_indices, features_id='24c24b32-949b-474e-b500-9232c9f7ab65')
+
+
 def index():
     print(f"Starting scheduler at: {datetime.now(pytz.timezone('Asia/Jakarta'))}")
     print_log(f"Starting scheduler at: {datetime.now(pytz.timezone('Asia/Jakarta'))}")
 
     # Schedule task setiap 1 jam
     schedule.every().hour.at(":00").do(task)
+    schedule.every(6).hour.at(":00").do(feature)
     
     # Run task immediately for current hour
     task()
+    feature()
 
     while True:
         try:
@@ -132,4 +152,5 @@ def index():
             time.sleep(60)
 
 if __name__ == '__main__':
-    index()
+    # index()
+    feature()

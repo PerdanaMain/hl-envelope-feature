@@ -54,6 +54,22 @@ def get_envelope_values(part_id):
         if conn:
             conn.close()
 
+def get_envelope_values_by_date(part_id, start_date, end_date):
+    conn = None
+    try:
+        conn = Config.get_fetch_connection()
+        cur = conn.cursor()
+
+        query = "SELECT value, created_at as datetime FROM dl_envelope_fetch WHERE part_id = %s AND created_at BETWEEN %s AND %s ORDER BY created_at ASC"
+        cur.execute(query, (part_id, start_date, end_date))
+        parts = cur.fetchall()
+        return parts
+    except Exception as e:
+        print(f"An exception occurred: {e}")
+    finally:
+        if conn:
+            conn.close()    
+
 
 def create_envelope(data: pd.DataFrame, part_id: str) -> None:
     conn = None
