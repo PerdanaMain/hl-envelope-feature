@@ -67,7 +67,7 @@ def execute_arima(equipment_id, features_id):
 
     model_fit = train_arima_model(train, best_order)
 
-    n_days = 7
+    n_days = 7 * 24 # 7 hari ke depan per jam
     future_forecast = model_fit.forecast(steps=n_days)
 
     # Membuat timestamp untuk 7 hari ke depan
