@@ -10,7 +10,7 @@ def get_parts():
         conn = Config.get_connection()
         cur = conn.cursor()
 
-        query = "SELECT id, web_id, type_id, part_name  FROM pf_parts WHERE type_id != '673b26b9-fb94-40aa-8c33-ccea214c0ef3'"
+        query = "SELECT id, web_id, type_id, part_name  FROM pf_parts WHERE type_id != 'b45a04c6-e2e2-465a-ad84-ccefe0f324d2'"
 
         cur.execute(query)
         parts = cur.fetchall()
