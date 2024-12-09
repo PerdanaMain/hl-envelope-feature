@@ -16,12 +16,19 @@ def index():
 
             print(f"Found {len(max_indices)} maxima")
 
-            save_envelopes_to_db(part[0], df, max_indices, features_id='24c24b32-949b-474e-b500-9232c9f7ab65')
-            execute_arima(part[0], features_id='24c24b32-949b-474e-b500-9232c9f7ab65')
+            # save_envelopes_to_db(part[0], df, max_indices, features_id='9dcb7e40-ada7-43eb-baf4-2ed584233de7')
+            execute_arima(part[0], features_id='9dcb7e40-ada7-43eb-baf4-2ed584233de7')
             
     except Exception as e:
         print(f"Failed to fetch data: {str(e)}")
 
 
 if __name__ == '__main__':
-  index()
+    index()
+    # parts = get_parts()
+    # print(f"Fetched {len(parts)} parts")
+    
+    # for part in parts:
+    #     # show if empty values
+    #     data = get_envelope_values(part[0])
+    #     print(f"Fetched {len(data)} records for part {part[3]}")
