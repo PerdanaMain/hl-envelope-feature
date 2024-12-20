@@ -75,7 +75,7 @@ def fetch(username: str, password: str, host: str, web_id: str) -> pd.DataFrame:
     # Generate all timestamps first
     start_date = datetime(2024, 10, 21) 
     current_date = datetime.now()
-    end_date = current_date.replace(hour=8, minute=59, second=59, microsecond=999999)
+    end_date = current_date.replace(hour=10, minute=59, second=59, microsecond=999999)
     
     dates = [
         (start_date + timedelta(days=d, hours=h)).strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]

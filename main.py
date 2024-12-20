@@ -124,8 +124,7 @@ def feature():
         min_indices, max_indices = find_signal_envelopes(signal_values)
 
         print(f"Found {len(max_indices)} maxima")
-        save_envelopes_to_db(part[0], df, max_indices, features_id='24c24b32-949b-474e-b500-9232c9f7ab65')
-        execute_arima(part[0], features_id='24c24b32-949b-474e-b500-9232c9f7ab65')
+        save_envelopes_to_db(part[0], df, max_indices, features_id='9dcb7e40-ada7-43eb-baf4-2ed584233de7')
 
 
 def index():
@@ -134,11 +133,11 @@ def index():
 
     # Schedule task setiap 1 jam
     schedule.every().hour.at(":00").do(task)
-    schedule.every(6).hour.at(":00").do(feature)
+    # schedule.every(6).hour.at(":00").do(feature)
     
     # Run task immediately for current hour
-    task()
-    feature()
+    # task()
+    # feature()
 
     while True:
         try:
@@ -154,5 +153,6 @@ def index():
             time.sleep(60)
 
 if __name__ == '__main__':
-    # index()
-    feature()
+    index()
+    # feature()
+    # task()
