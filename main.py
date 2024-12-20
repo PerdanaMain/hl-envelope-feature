@@ -133,7 +133,11 @@ def index():
 
     # Schedule task setiap 1 jam
     schedule.every().hour.at(":00").do(task)
-    # schedule.every(6).hour.at(":00").do(feature)
+    schedule.every(6).hour.at(":00").do(feature)
+    
+    next_run = schedule.next_run()
+    print(f"Next scheduled run at: {next_run}")
+    print_log(f"Next scheduled run at: {next_run}")
     
     # Run task immediately for current hour
     # task()
