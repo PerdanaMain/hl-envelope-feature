@@ -126,6 +126,8 @@ def feature():
         print(f"Found {len(max_indices)} maxima")
         save_envelopes_to_db(part[0], df, max_indices, features_id='9dcb7e40-ada7-43eb-baf4-2ed584233de7')
 
+    print(f"Task feature high env completed at: {datetime.now(pytz.timezone('Asia/Jakarta'))}")
+    print_log(f"Task feature high env completed at: {datetime.now(pytz.timezone('Asia/Jakarta'))}")
 
 def index():
     print(f"Starting scheduler at: {datetime.now(pytz.timezone('Asia/Jakarta'))}")
@@ -133,7 +135,7 @@ def index():
 
     # Schedule task setiap 1 jam
     schedule.every().hour.at(":00").do(task)
-    schedule.every(6).hour.at(":00").do(feature)
+    # schedule.every(6).hour.at(":00").do(feature)
     
     next_run = schedule.next_run()
     print(f"Next scheduled run at: {next_run}")
