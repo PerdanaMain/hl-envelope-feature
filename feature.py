@@ -16,8 +16,7 @@ def index():
 
             print(f"Found {len(max_indices)} maxima")
 
-            # save_envelopes_to_db(part[0], df, max_indices, features_id='9dcb7e40-ada7-43eb-baf4-2ed584233de7')
-            # execute_arima(part[0], features_id='9dcb7e40-ada7-43eb-baf4-2ed584233de7')
+            save_envelopes_to_db(part[0], df, max_indices, features_id='9dcb7e40-ada7-43eb-baf4-2ed584233de7')
             
     except Exception as e:
         print(f"Failed to fetch data: {str(e)}")
