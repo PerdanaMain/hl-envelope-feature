@@ -11,8 +11,8 @@ def index():
     print(f"Starting scheduler for feature high env at: {datetime.now(pytz.timezone('Asia/Jakarta'))}")
     print_log(f"Starting scheduler for feature high env at: {datetime.now(pytz.timezone('Asia/Jakarta'))}")
 
-    # Schedule task setiap 6 jam
-    schedule.every(6).hours.at(":00").do(feature)
+    # Schedule task setiap hari
+    schedule.every().day.at("00:15").do(feature)
     
     next_run = schedule.next_run()
     print(f"Next scheduled run at: {next_run}")

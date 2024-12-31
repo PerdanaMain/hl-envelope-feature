@@ -112,13 +112,16 @@ def task():
         print_log(f"Error executing task: {e}")
 
 def feature():
-    current_timestamp = datetime.now(pytz.timezone('Asia/Jakarta'))
-    past_timestamp = current_timestamp - timedelta(hours=6)
+    # Mendapatkan timestamp untuk awal hari kemarin (00:00:00)
+    yesterday_start = (datetime.now() - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    # Mendapatkan timestamp untuk akhir hari kemarin (23:59:59)
+    yesterday_end = yesterday_start + timedelta(days=1) - timedelta(seconds=1)
 
     parts = get_parts()
 
     for part in parts:
-        data = get_envelope_values_by_date(part[0], start_date=past_timestamp, end_date=current_timestamp)
+        data = get_envelope_values_by_date(part[0], start_date=yesterday_start, end_date=yesterday_end)
         df = pd.DataFrame(data, columns=["value", "datetime"])
         signal_values = df["value"].values
         min_indices, max_indices = find_signal_envelopes(signal_values)
