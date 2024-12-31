@@ -38,14 +38,14 @@ def get_part(part_id):
             conn.close()
 
 
-def get_envelope_values(part_id):
+def get_envelope_values(part_id, current_date):
     conn = None
     try:
         conn = Config.get_fetch_connection()
         cur = conn.cursor()
 
-        query = "SELECT value, created_at as datetime FROM dl_envelope_fetch WHERE part_id = %s ORDER BY created_at ASC"
-        cur.execute(query, (part_id,))
+        query = "SELECT value, created_at as datetime FROM dl_envelope_fetch WHERE part_id = %s AND created_at < %s ORDER BY created_at ASC"
+        cur.execute(query, (part_id, current_date))
         parts = cur.fetchall()
         return parts
     except Exception as e:

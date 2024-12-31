@@ -6,8 +6,9 @@ import pandas as pd  # type: ignore
 def index():
     try:
         parts = get_parts()
+        current_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
         for part in parts:
-            data = get_envelope_values(part[0])
+            data = get_envelope_values(part[0], current_date)
             print(f"Fetched {len(data)} records for part {part[3]}")
 
             df = pd.DataFrame(data, columns=["value", "datetime"])
