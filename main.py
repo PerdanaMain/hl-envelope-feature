@@ -49,13 +49,14 @@ def fetch(username: str, password: str, host: str, web_id: str) -> pd.DataFrame:
         
         data = response.json()
         
-        # Process the response
+         # Process the response
         signal_value = data['Value']
         if isinstance(signal_value, dict):
             signal_value = signal_value.get('Value', 0)
         
         if isinstance(signal_value, (int, float)) and (math.isnan(signal_value) or math.isinf(signal_value)):
             signal_value = 0
+        
         
         # Create DataFrame with single record
         df = pd.DataFrame([{
@@ -80,6 +81,7 @@ def task():
         
         config = Config()
         parts = get_parts()
+        print(f"Processing total: {len(parts)} parts")
         
         for part in parts:
             try:
@@ -91,6 +93,8 @@ def task():
                     config.PIWEB_API_URL,
                     part[1]
                 )
+
+                print(f"Data: {data}")
                 
                 if not data.empty:
                     create_envelope(data, part[0])
@@ -138,16 +142,11 @@ def index():
 
     # Schedule task setiap 1 jam
     schedule.every().hour.at(":00").do(task)
-    # schedule.every(6).hour.at(":00").do(feature)
     
     next_run = schedule.next_run()
     print(f"Next scheduled run at: {next_run}")
     print_log(f"Next scheduled run at: {next_run}")
     
-    # Run task immediately for current hour
-    # task()
-    # feature()
-
     while True:
         try:
             schedule.run_pending()
@@ -162,6 +161,6 @@ def index():
             time.sleep(60)
 
 if __name__ == '__main__':
-    index()
+    # index()
     # feature()
-    # task()
+    task()

@@ -168,7 +168,7 @@ def create_envelope(data: pd.DataFrame, part_id: str) -> None:
 
         cur.executemany(
             """
-            INSERT INTO dl_envelope_fetch 
+            INSERT INTO dl_envelope_fetch
             (id, part_id, value, created_at, updated_at) 
             VALUES (%s, %s, %s, %s, %s)
         """,
