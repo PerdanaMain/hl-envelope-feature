@@ -29,7 +29,7 @@ def get_part(part_id):
 
         query = "SELECT id, part_name FROM pf_parts WHERE id = %s "
         cur.execute(query, (part_id,))
-        parts = cur.fetchall()
+        parts = cur.fetchone()
         return parts
     except Exception as e:
         print(f"An exception occurred: {e}")

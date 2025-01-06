@@ -73,10 +73,10 @@ def fetch(username: str, password: str, host: str, web_id: str) -> pd.DataFrame:
     auth = HTTPBasicAuth(username, password)
     
     # Generate all timestamps first
-    start_date = datetime(2025, 1, 1) 
+    start_date = datetime(2024, 9, 1) 
     current_date = datetime.now()
     # end_date = current_date.replace(hour=10, minute=59, second=59, microsecond=999999)
-    end_date = datetime(2025, 1, 5, 23, 0, 0, 0)
+    end_date = datetime(2025, 1, 6, 14, 0, 0, 0)
     
     dates = [
         (start_date + timedelta(days=d, hours=h)).strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]

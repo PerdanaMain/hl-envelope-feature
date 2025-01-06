@@ -121,6 +121,8 @@ def feature():
     
     # Mendapatkan timestamp untuk akhir hari kemarin (23:59:59)
     yesterday_end = yesterday_start + timedelta(days=1) - timedelta(seconds=1)
+    print(yesterday_start)
+    print(yesterday_end)
 
     parts = get_parts()
 
@@ -161,6 +163,6 @@ def index():
             time.sleep(60)
 
 if __name__ == '__main__':
-    # index()
+    index()
     # feature()
-    task()
+    # task()
