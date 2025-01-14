@@ -69,6 +69,21 @@ def get_envelope_values_by_date(part_id, start_date, end_date):
     finally:
         if conn:
             conn.close()    
+def checking_envelope_values(part_id):
+    conn = None
+    try:
+        conn = Config.get_fetch_connection()
+        cur = conn.cursor()
+        
+        query = "SELECT id, part_id, value, created_at as datetime FROM dl_envelope_fetch where part_id = %s limit 1"
+        cur.execute(query, (part_id))
+        parts = cur.fetchone()
+        return parts
+    except Exception as e:
+        print(f"An exception occurred: {e}")
+    finally:
+        if conn:
+            conn.close()
 
 def get_feature_values(part_id,features_id):
     try:

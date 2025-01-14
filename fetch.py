@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Dict, Optional
 from config import Config
 from format_gmt import format_to_gmt
-from model import get_parts, create_envelope
+from model import get_parts, create_envelope, checking_envelope_values
 
 
 def fetch_single_value(params: Dict) -> Optional[Dict]:
@@ -76,7 +76,7 @@ def fetch(username: str, password: str, host: str, web_id: str) -> pd.DataFrame:
     start_date = datetime(2024, 9, 1) 
     current_date = datetime.now()
     # end_date = current_date.replace(hour=10, minute=59, second=59, microsecond=999999)
-    end_date = datetime(2025, 1, 6, 14, 0, 0, 0)
+    end_date = datetime(2025, 1, 11, 13, 0, 0, 0)
     
     dates = [
         (start_date + timedelta(days=d, hours=h)).strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
@@ -151,6 +151,41 @@ def main():
         print(f"Failed to initialize: {str(e)}")
         raise
 
+def run_selected_part():
+    try:
+        config = Config()
+        parts = get_parts()
+        
+        for part in parts:
+            try:
+                exists = checking_envelope_values(part[0])
+                if exists:
+                    print(f"Envelope values already exist for part {part[3]}")
+                    continue
+                
+                print(f"Fetching data for part {part[3]}")
+                
+                data = fetch(
+                    config.PIWEB_API_USER,
+                    config.PIWEB_API_PASS,
+                    config.PIWEB_API_URL,
+                    part[1]
+                )
+                if data.empty:
+                    print(f"No data fetched for part {part[3]}")
+                    continue
+                    
+                print(f"Fetched {len(data)} records for part {part[3]}")
+                create_envelope(data, part[0])
+                
+            except Exception as e:
+                print(f"Failed to process part {part[3]}: {str(e)}")
+                continue
+            
+    except Exception as e:
+        print(f"Failed to initialize: {str(e)}")
+        raise
+
 if __name__ == "__main__":
-    main()
+    run_selected_part()
     # pass
