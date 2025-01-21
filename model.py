@@ -76,11 +76,29 @@ def checking_envelope_values(part_id):
         cur = conn.cursor()
         
         query = "SELECT id, part_id, value, created_at as datetime FROM dl_envelope_fetch where part_id = %s limit 1"
-        cur.execute(query, (part_id))
+        cur.execute(query, (part_id, ))
         parts = cur.fetchone()
         return parts
     except Exception as e:
         print(f"An exception occurred: {e}")
+        return None
+    finally:
+        if conn:
+            conn.close()
+            
+def checking_features_values(part_id):
+    conn = None
+    try:
+        conn = Config.get_connection()
+        cur = conn.cursor()
+        
+        query = "SELECT * FROM dl_features_data where part_id = %s limit 1"
+        cur.execute(query, (part_id, ))
+        parts = cur.fetchone()
+        return parts
+    except Exception as e:
+        print(f"An exception occurred: {e}")
+        return None
     finally:
         if conn:
             conn.close()

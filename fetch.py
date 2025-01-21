@@ -73,10 +73,10 @@ def fetch(username: str, password: str, host: str, web_id: str) -> pd.DataFrame:
     auth = HTTPBasicAuth(username, password)
     
     # Generate all timestamps first
-    start_date = datetime(2024, 9, 1) 
+    start_date = datetime(2025, 1, 15, 18, 0, 0, 0) 
     current_date = datetime.now()
     # end_date = current_date.replace(hour=10, minute=59, second=59, microsecond=999999)
-    end_date = datetime(2025, 1, 11, 13, 0, 0, 0)
+    end_date = datetime(2025, 1, 19, 3, 0, 0, 0)
     
     dates = [
         (start_date + timedelta(days=d, hours=h)).strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
@@ -127,6 +127,7 @@ def main():
     try:
         config = Config()
         parts = get_parts()
+        print(f"start fetching for {len(parts)}")
         
         for part in parts:
             try:
@@ -155,15 +156,17 @@ def run_selected_part():
     try:
         config = Config()
         parts = get_parts()
+        counter = 0
         
         for part in parts:
             try:
                 exists = checking_envelope_values(part[0])
-                if exists:
-                    print(f"Envelope values already exist for part {part[3]}")
+                if exists is not None:
+                    print(f"Data envelope sudah ada untuk part {part[3]}")
                     continue
-                
-                print(f"Fetching data for part {part[3]}")
+                    
+                print(f"Data envelope belum ada untuk part {part[3]}")
+                counter += 1
                 
                 data = fetch(
                     config.PIWEB_API_USER,
@@ -171,21 +174,25 @@ def run_selected_part():
                     config.PIWEB_API_URL,
                     part[1]
                 )
+                
                 if data.empty:
                     print(f"No data fetched for part {part[3]}")
                     continue
-                    
+
                 print(f"Fetched {len(data)} records for part {part[3]}")
                 create_envelope(data, part[0])
                 
             except Exception as e:
-                print(f"Failed to process part {part[3]}: {str(e)}")
+                print(f"Gagal memproses part {part[3]}: {str(e)}")
                 continue
             
+        print(f"Total part yang belum memiliki data: {counter}")
+        print(f"Total part yang dicek: {len(parts)}")
     except Exception as e:
-        print(f"Failed to initialize: {str(e)}")
+        print(f"Gagal menginisialisasi: {str(e)}")
         raise
-
+    
 if __name__ == "__main__":
-    run_selected_part()
+    # run_selected_part()
+    main()
     # pass

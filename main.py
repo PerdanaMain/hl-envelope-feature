@@ -85,6 +85,9 @@ def task():
         
         for part in parts:
             try:
+                if part[2] == None:
+                    continue
+                
                 print(f"Processing part: {part[3]}")  # Assuming part[3] contains part name
                 print_log(f"Processing part: {part[3]}")  # Assuming part[3] contains part name
                 data = fetch(
