@@ -58,9 +58,19 @@ def run_selected_part():
         print(f"Gagal menginisialisasi: {str(e)}")
         raise
    
+def delete_feature_by_selected_part():
+    try:
+        parts = get_parts()
+        for part in parts:
+            delete_feature_by_part(part[0])
+    except Exception as e:
+        print(f"Gagal menghapus data feature: {str(e)}")
+        raise
+   
 if __name__ == '__main__':
     # index()
     run_selected_part()
+    # delete_feature_by_selected_part()
     # parts = get_parts()
     # print(f"Fetched {len(parts)} parts")
     

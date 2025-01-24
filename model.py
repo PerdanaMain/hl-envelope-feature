@@ -10,7 +10,7 @@ def get_parts():
         conn = Config.get_connection()
         cur = conn.cursor()
 
-        query = "SELECT id, web_id, type_id, part_name  FROM pf_parts"
+        query = "SELECT id, web_id, type_id, part_name  FROM pf_parts WHERE web_id IS NOT NULL"
 
         cur.execute(query)
         parts = cur.fetchall()
@@ -37,6 +37,17 @@ def get_part(part_id):
         if conn:
             conn.close()
 
+def delete_feature_by_part(part_id):
+    try:
+        conn = Config.get_connection()
+        cur = conn.cursor()
+        cur.execute("DELETE FROM dl_features_data WHERE part_id = %s", (part_id,))
+        conn.commit()
+    except Exception as e:
+        print(f"An exception occurred: {e}")
+    finally:
+        if conn:
+            conn.close()    
 
 def get_envelope_values(part_id, current_date):
     conn = None
