@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from Envelope import predict_detail
 from plot import find_signal_envelopes
 from format_gmt import format_to_gmt
 from requests.auth import HTTPBasicAuth
@@ -137,6 +138,7 @@ def feature():
 
         print(f"Found {len(max_indices)} maxima")
         save_envelopes_to_db(part[0], df, max_indices, features_id='9dcb7e40-ada7-43eb-baf4-2ed584233de7')
+        predict_detail(part[0])
 
     print(f"Task feature high env completed at: {datetime.now(pytz.timezone('Asia/Jakarta'))}")
     print_log(f"Task feature high env completed at: {datetime.now(pytz.timezone('Asia/Jakarta'))}")

@@ -4,7 +4,7 @@ from arima import execute_arima
 import pandas as pd  # type: ignore
 
 def execute_feature(part, current_date):
-    data = get_envelope_values(part[0], current_date)
+    data = get_envelope_values(part[0])
     print(f"Fetched {len(data)} records for part {part[3]}")
 
     df = pd.DataFrame(data, columns=["value", "datetime"])
@@ -68,8 +68,8 @@ def delete_feature_by_selected_part():
         raise
    
 if __name__ == '__main__':
-    # index()
-    run_selected_part()
+    index()
+    # run_selected_part()
     # delete_feature_by_selected_part()
     # parts = get_parts()
     # print(f"Fetched {len(parts)} parts")
