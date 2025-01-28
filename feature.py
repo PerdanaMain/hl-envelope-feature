@@ -27,7 +27,7 @@ def index():
     try:
         parts = get_parts()
         for part in parts:
-            execute_feature(part)
+            execute_feature(part[0])
 
     except Exception as e:
         print(f"Failed to fetch data: {str(e)}")

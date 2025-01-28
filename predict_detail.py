@@ -63,8 +63,8 @@ def main(part_id):
     detail = get_detail(part_id)
     features_id = "9dcb7e40-ada7-43eb-baf4-2ed584233de7"
     value, current_value = get_current_feature_value(part_id, features_id)
-    print("detail: ", detail)
-    print("current: ", current_value)
+    # print("detail: ", detail)
+    # print("current: ", current_value)
 
     print("menghitung status ...")
     result = checking_status(current_value, detail)
