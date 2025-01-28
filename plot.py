@@ -34,12 +34,10 @@ def find_signal_envelopes(signal, chunk_size=1, split_at_mean=False):
     return min_indices, max_indices
 
 
-def plot_signals_with_envelopes(df, part_name):
+def plot_signals_with_envelopes(signal_values, part_name, max_indices, min_indices, df):
     """
     Plot signal data dengan high dan low envelopes
     """
-    signal_values = df["value"].values
-    min_indices, max_indices = find_signal_envelopes(signal_values)
 
     plt.figure(figsize=(15, 7))
 
@@ -77,10 +75,10 @@ def plot_signals_with_envelopes(df, part_name):
 
 def main():
     # Generate data
-    data = get_envelope_values(part_id="0f6c87be-65a7-480f-8121-f2bcc05ec407")
-    part = get_part(part_id="0f6c87be-65a7-480f-8121-f2bcc05ec407")
+    data = get_envelope_values(part_id="22828ff2-010f-4ff7-b012-85c8e364cbc8")
+    part = get_part(part_id="22828ff2-010f-4ff7-b012-85c8e364cbc8")
 
-    print(part)
+    print(part[1])
 
     # Tampilkan informasi data
     if not data:
@@ -96,8 +94,13 @@ def main():
     print(f"5 data teratas:\n{df.head()}")
     print(f"Rentang waktu: {df['datetime'].min()} sampai {df['datetime'].max()}")
 
-    # Plot signal dengan envelopes
-    plot_signals_with_envelopes(df, part[0][1])
+    signal_values = df["value"].values
+    min_indices, max_indices = find_signal_envelopes(signal_values)
+    print("max: ", max_indices)
+    print("min: ", min_indices)
+
+    # # Plot signal dengan envelopes
+    # plot_signals_with_envelopes(signal_values, part[1], max_indices, min_indices)
 
 
 if __name__ == "__main__":
