@@ -157,8 +157,10 @@ def feature():
         min_indices, max_indices = find_signal_envelopes(signal_values)
 
         print(f"Found {len(max_indices)} maxima")
-        # save_envelopes_to_db(part[0], df, max_indices, features_id='9dcb7e40-ada7-43eb-baf4-2ed584233de7')
-        # predict_detail(part[0])
+        save_envelopes_to_db(
+            part[0], df, max_indices, features_id="9dcb7e40-ada7-43eb-baf4-2ed584233de7"
+        )
+        predict_detail(part[0])
 
     print(
         f"Task feature high env completed at: {datetime.now(pytz.timezone('Asia/Jakarta'))}"

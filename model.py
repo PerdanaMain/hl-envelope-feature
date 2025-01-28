@@ -37,6 +37,7 @@ def get_part(part_id):
         if conn:
             conn.close()
 
+
 def delete_feature_by_part(part_id):
     try:
         conn = Config.get_connection()
@@ -47,7 +48,8 @@ def delete_feature_by_part(part_id):
         print(f"An exception occurred: {e}")
     finally:
         if conn:
-            conn.close()    
+            conn.close()
+
 
 def get_envelope_values(part_id):
     conn = None
@@ -65,6 +67,7 @@ def get_envelope_values(part_id):
         if conn:
             conn.close()
 
+
 def get_envelope_values_by_date(part_id, start_date, end_date):
     conn = None
     try:
@@ -79,32 +82,17 @@ def get_envelope_values_by_date(part_id, start_date, end_date):
         print(f"An exception occurred: {e}")
     finally:
         if conn:
-            conn.close()    
+            conn.close()
+
+
 def checking_envelope_values(part_id):
     conn = None
     try:
         conn = Config.get_fetch_connection()
         cur = conn.cursor()
-        
+
         query = "SELECT id, part_id, value, created_at as datetime FROM dl_envelope_fetch where part_id = %s limit 1"
-        cur.execute(query, (part_id, ))
-        parts = cur.fetchone()
-        return parts
-    except Exception as e:
-        print(f"An exception occurred: {e}")
-        return None
-    finally:
-        if conn:
-            conn.close()
-            
-def checking_features_values(part_id):
-    conn = None
-    try:
-        conn = Config.get_connection()
-        cur = conn.cursor()
-        
-        query = "SELECT * FROM dl_features_data where part_id = %s limit 1"
-        cur.execute(query, (part_id, ))
+        cur.execute(query, (part_id,))
         parts = cur.fetchone()
         return parts
     except Exception as e:
@@ -114,7 +102,26 @@ def checking_features_values(part_id):
         if conn:
             conn.close()
 
-def get_feature_values(part_id,features_id):
+
+def checking_features_values(part_id):
+    conn = None
+    try:
+        conn = Config.get_connection()
+        cur = conn.cursor()
+
+        query = "SELECT * FROM dl_features_data where part_id = %s limit 1"
+        cur.execute(query, (part_id,))
+        parts = cur.fetchone()
+        return parts
+    except Exception as e:
+        print(f"An exception occurred: {e}")
+        return None
+    finally:
+        if conn:
+            conn.close()
+
+
+def get_feature_values(part_id, features_id):
     try:
         conn = Config.get_connection()
         cur = conn.cursor()
@@ -135,33 +142,36 @@ def get_feature_values(part_id,features_id):
     except Exception as e:
         print(f"An exception occurred {e}")
 
+
 def create_predict(part_id, features_id, values, timestamps):
     try:
         now = datetime.now(pytz.timezone("Asia/Jakarta")).strftime("%Y-%m-%d %H:%M:%S")
         conn = Config.get_connection()
         cur = conn.cursor()
-        
+
         # SQL Query
         sql = """
         INSERT INTO dl_predict (id, part_id, features_id, date_time, pfi_value, status, created_at, updated_at)
         VALUES (%s, %s, %s, %s, %s, %s,%s, %s)
         """
-        
+
         # Iterasi dan eksekusi untuk setiap prediksi
         data_to_insert = []
         for value, timestamp in zip(values, timestamps):
             predict_id = str(uuid.uuid4())  # Generate a new UUID for each record
             value = float(value)
-            data_to_insert.append((predict_id, part_id, features_id, timestamp, value, "normal", now, now))
-        
+            data_to_insert.append(
+                (predict_id, part_id, features_id, timestamp, value, "normal", now, now)
+            )
+
         # Execute batch insert
         cur.executemany(sql, data_to_insert)
         # Commit perubahan
         conn.commit()
-    
+
     except Exception as e:
         print(f"An exception occurred: {e}")
-    
+
     finally:
         # Pastikan koneksi ditutup
         if cur:
@@ -232,10 +242,11 @@ def create_envelope(data: pd.DataFrame, part_id: str) -> None:
             cur.close()
             conn.close()
 
+
 def save_envelopes_to_db(part_id: str, df: pd.DataFrame, max_indices, features_id):
     """
     Menyimpan nilai envelope ke database
-    
+
     Args:
         part_id: ID dari part
         df: DataFrame dengan data signal
@@ -246,34 +257,36 @@ def save_envelopes_to_db(part_id: str, df: pd.DataFrame, max_indices, features_i
         conn = Config.get_connection()
         cur = conn.cursor()
         now = datetime.now(pytz.timezone("Asia/Jakarta")).strftime("%Y-%m-%d %H:%M:%S")
-        
+
         # Siapkan query insert
         query = """
             INSERT INTO dl_features_data 
             (id, features_id, date_time, part_id, value, created_at, updated_at) 
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
-        
+
         # Siapkan data untuk high envelope
         high_envelopes = [
             (
                 str(uuid.uuid4()),
                 features_id,
-                df['datetime'].iloc[idx],
+                df["datetime"].iloc[idx],
                 part_id,
-                float(df['value'].iloc[idx]),
+                float(df["value"].iloc[idx]),
                 now,
                 now,
             )
             for idx in max_indices
         ]
-        
+        print(high_envelopes)
         # Insert data
         cur.executemany(query, high_envelopes)
         conn.commit()
-        
-        print(f"Successfully saved {len(high_envelopes)} high envelopes  for part {part_id}")
-        
+
+        print(
+            f"Successfully saved {len(high_envelopes)} high envelopes  for part {part_id}"
+        )
+
     except Exception as e:
         if conn:
             conn.rollback()
@@ -302,7 +315,12 @@ def get_detail(part_id):
             conn.close()
 
 
-def update_detail(part_id, status, time_failure, predict_value,):
+def update_detail(
+    part_id,
+    status,
+    time_failure,
+    predict_value,
+):
     try:
         conn = Config.get_connection()
 
@@ -310,7 +328,7 @@ def update_detail(part_id, status, time_failure, predict_value,):
         now = datetime.now(pytz.timezone("Asia/Jakarta"))
 
         query = "UPDATE pf_details SET predict_status = %s, time_failure = %s, predict_value= %s, updated_at = %s WHERE part_id = %s"
-        cur.execute(query, (status, time_failure,predict_value,now, part_id))
+        cur.execute(query, (status, time_failure, predict_value, now, part_id))
         conn.commit()
     except Exception as e:
         print(f"An exception occurred while updating: {e}")
@@ -318,13 +336,13 @@ def update_detail(part_id, status, time_failure, predict_value,):
         if conn:
             conn.close()
 
+
 def update_percent_condition(part_id, percent_condition, warning_percent_condition):
     try:
         conn = Config.get_connection()
 
         cur = conn.cursor()
         now = datetime.now(pytz.timezone("Asia/Jakarta"))
-
 
         query = "UPDATE pf_details SET percent_condition = %s, warning_percent_condition = %s, updated_at = %s WHERE part_id = %s"
         cur.execute(query, (percent_condition, warning_percent_condition, now, part_id))
@@ -334,6 +352,7 @@ def update_percent_condition(part_id, percent_condition, warning_percent_conditi
     finally:
         if conn:
             conn.close()
+
 
 def get_current_feature_value(part_id, feature_id):
     try:
