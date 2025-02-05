@@ -149,17 +149,17 @@ def feature():
     for part in parts:
         print(f"processing feature for {part[3]}")
 
-        data = get_envelope_values_by_date(
-            part[0], start_date=yesterday_start, end_date=yesterday_end
-        )
-        df = pd.DataFrame(data, columns=["value", "datetime"])
-        signal_values = df["value"].values
-        min_indices, max_indices = find_signal_envelopes(signal_values)
+        # data = get_envelope_values_by_date(
+        #     part[0], start_date=yesterday_start, end_date=yesterday_end
+        # )
+        # df = pd.DataFrame(data, columns=["value", "datetime"])
+        # signal_values = df["value"].values
+        # min_indices, max_indices = find_signal_envelopes(signal_values)
 
-        print(f"Found {len(max_indices)} maxima")
-        save_envelopes_to_db(
-            part[0], df, max_indices, features_id="9dcb7e40-ada7-43eb-baf4-2ed584233de7"
-        )
+        # print(f"Found {len(max_indices)} maxima")
+        # save_envelopes_to_db(
+        #     part[0], df, max_indices, features_id="9dcb7e40-ada7-43eb-baf4-2ed584233de7"
+        # )
         predict_detail(part[0])
 
     print(
@@ -199,3 +199,4 @@ if __name__ == "__main__":
     # index()
     feature()
     # task()
+    # predict_detail(part_id='30513c74-4f25-4543-99d7-90503e022c5c')

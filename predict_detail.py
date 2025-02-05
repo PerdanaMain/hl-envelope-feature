@@ -16,7 +16,7 @@ def checking_status(values, detail):
 
     result = []
 
-    value = values[3]  # nilai
+    value = float(values[3]) if values[3] is not None else 0 # nilai
     dt = values[2]  # datetime
     # print(value[1] < lower_threshold)
 

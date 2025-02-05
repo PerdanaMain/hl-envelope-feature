@@ -278,7 +278,6 @@ def save_envelopes_to_db(part_id: str, df: pd.DataFrame, max_indices, features_i
             )
             for idx in max_indices
         ]
-        print(high_envelopes)
         # Insert data
         cur.executemany(query, high_envelopes)
         conn.commit()
@@ -381,3 +380,44 @@ def get_current_feature_value(part_id, feature_id):
         return data[3], data
     except Exception as e:
         raise Exception(f"Error: {e}")
+    
+def get_count_envelope(part_id):
+    try:
+        conn = Config.get_fetch_connection()
+
+        cursor = conn.cursor()
+
+        # Query untuk mengambil data
+        query = """
+            SELECT COUNT(*) 
+            FROM dl_envelope_fetch def 
+            where def.part_id = %s
+        """
+
+        cursor.execute(query, (part_id,))
+
+        # Mendapatkan hasil dari query
+        data = cursor.fetchone()
+
+        cursor.close()
+        conn.close()
+
+        # Mengonversi setiap tuple menjadi dictionary
+        return  data
+    except Exception as e:
+        raise Exception(f"Error: {e}")
+
+def delete_envelope(part_id):
+    try:
+        conn = Config.get_fetch_connection()
+        cur = conn.cursor()
+
+
+        query = "DELETE from dl_envelope_fetch WHERE part_id = %s"
+        cur.execute(query, (part_id,))
+        conn.commit()
+    except Exception as e:
+        print(f"An exception occurred: {e}")
+    finally:
+        if conn:
+            conn.close()
