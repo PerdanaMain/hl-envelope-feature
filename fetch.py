@@ -73,10 +73,10 @@ def fetch(username: str, password: str, host: str, web_id: str) -> pd.DataFrame:
     auth = HTTPBasicAuth(username, password)
     
     # Generate all timestamps first
-    start_date = datetime(2024, 9, 1, 0, 0, 0, 0) 
+    start_date = datetime(2025, 2, 10, 14, 0, 0, 0) 
     current_date = datetime.now()
     # end_date = current_date.replace(hour=10, minute=59, second=59, microsecond=999999)
-    end_date = datetime(2025, 2, 4, 14, 0, 0, 0)
+    end_date = datetime(2025, 2, 11, 11, 0, 0, 0)
     
     dates = [
         (start_date + timedelta(days=d, hours=h)).strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
@@ -168,19 +168,19 @@ def run_selected_part():
                 print(f"Data envelope belum ada untuk part {part[3]}")
                 counter += 1
                 
-                data = fetch(
-                    config.PIWEB_API_USER,
-                    config.PIWEB_API_PASS,
-                    config.PIWEB_API_URL,
-                    part[1]
-                )
+                # data = fetch(
+                #     config.PIWEB_API_USER,
+                #     config.PIWEB_API_PASS,
+                #     config.PIWEB_API_URL,
+                #     part[1]
+                # )
                 
-                if data.empty:
-                    print(f"No data fetched for part {part[3]}")
-                    continue
+                # if data.empty:
+                #     print(f"No data fetched for part {part[3]}")
+                #     continue
 
-                print(f"Fetched {len(data)} records for part {part[3]}")
-                create_envelope(data, part[0])
+                # print(f"Fetched {len(data)} records for part {part[3]}")
+                # create_envelope(data, part[0])
                 
             except Exception as e:
                 print(f"Gagal memproses part {part[3]}: {str(e)}")
@@ -193,6 +193,6 @@ def run_selected_part():
         raise
     
 if __name__ == "__main__":
-    run_selected_part()
-    # main()
+    # run_selected_part()
+    main()
     # pass

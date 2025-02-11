@@ -8,17 +8,17 @@ from predict_detail import main as predict_detail
 def execute_feature(part_id):
     part = get_part(part_id)
 
-    # data = get_envelope_values(part[0])
-    # print(f"Fetched {len(data)} records for part {part[1]}")
+    data = get_envelope_values(part[0])
+    print(f"Fetched {len(data)} records for part {part[1]}")
 
-    # df = pd.DataFrame(data, columns=["value", "datetime"])
-    # signal_values = df["value"].values
-    # min_indices, max_indices = find_signal_envelopes(signal_values)
+    df = pd.DataFrame(data, columns=["value", "datetime"])
+    signal_values = df["value"].values
+    min_indices, max_indices = find_signal_envelopes(signal_values)
 
-    # print(f"Found {len(max_indices)} maxima")
-    # save_envelopes_to_db(
-    #     part[0], df, max_indices, features_id="9dcb7e40-ada7-43eb-baf4-2ed584233de7"
-    # )
+    print(f"Found {len(max_indices)} maxima")
+    save_envelopes_to_db(
+        part[0], df, max_indices, features_id="9dcb7e40-ada7-43eb-baf4-2ed584233de7"
+    )
 
     predict_detail(part[0])
     
@@ -94,10 +94,10 @@ def undo_fetch_envelope():
         raise
 
 if __name__ == "__main__":
-    # index()
+    index()
     # undo_fetch_envelope()
     # execute_feature()
-    run_selected_part()
+    # run_selected_part()
     # delete_feature_by_selected_part()
     # parts = get_parts()
     # print(f"Fetched {len(parts)} parts")
