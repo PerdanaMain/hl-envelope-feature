@@ -15,10 +15,10 @@ def execute_feature(part_id):
     signal_values = df["value"].values
     min_indices, max_indices = find_signal_envelopes(signal_values)
 
-    print(f"Found {len(max_indices)} maxima")
-    save_envelopes_to_db(
-        part[0], df, max_indices, features_id="9dcb7e40-ada7-43eb-baf4-2ed584233de7"
-    )
+    # print(f"Found {len(max_indices)} maxima")
+    # save_envelopes_to_db(
+    #     part[0], df, max_indices, features_id="9dcb7e40-ada7-43eb-baf4-2ed584233de7"
+    # )
 
     predict_detail(part[0])
     
@@ -38,10 +38,10 @@ def index():
 def run_selected_part():
     try:
         config = Config()
-        parts = get_parts()
+        # parts = get_parts()
+        parts = get_new_parts()
         counter = 0
 
-        current_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
         for part in parts:
             try:
@@ -53,7 +53,7 @@ def run_selected_part():
                 print(f"Data feature belum ada untuk part {part[3]}")
                 counter += 1
 
-                execute_feature(part, current_date)
+                execute_feature(part[0])
 
             except Exception as e:
                 print(f"Gagal memproses part {part[3]}: {str(e)}")
@@ -94,10 +94,10 @@ def undo_fetch_envelope():
         raise
 
 if __name__ == "__main__":
-    index()
+    # index()
     # undo_fetch_envelope()
     # execute_feature()
-    # run_selected_part()
+    run_selected_part()
     # delete_feature_by_selected_part()
     # parts = get_parts()
     # print(f"Fetched {len(parts)} parts")

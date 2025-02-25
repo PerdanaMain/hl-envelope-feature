@@ -20,6 +20,26 @@ def get_parts():
     finally:
         if conn:
             conn.close()
+            
+def get_new_parts():
+    try:
+        conn = Config.get_connection()
+        cur = conn.cursor()
+
+        query = """
+        SELECT id, web_id, type_id, part_name
+        FROM pf_parts
+        WHERE web_id IS NOT NULL AND created_at > '2025-02-23'
+        """
+
+        cur.execute(query)
+        parts = cur.fetchall()
+        return parts
+    except Exception as e:
+        print(f"An exception occurred: {e}")
+    finally:
+        if conn:
+            conn.close()
 
 
 def get_part(part_id):
