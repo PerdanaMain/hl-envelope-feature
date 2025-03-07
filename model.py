@@ -20,7 +20,8 @@ def get_parts():
     finally:
         if conn:
             conn.close()
-            
+
+
 def get_new_parts():
     try:
         conn = Config.get_connection()
@@ -400,7 +401,8 @@ def get_current_feature_value(part_id, feature_id):
         return data[3], data
     except Exception as e:
         raise Exception(f"Error: {e}")
-    
+
+
 def get_count_envelope(part_id):
     try:
         conn = Config.get_fetch_connection()
@@ -423,15 +425,15 @@ def get_count_envelope(part_id):
         conn.close()
 
         # Mengonversi setiap tuple menjadi dictionary
-        return  data
+        return data
     except Exception as e:
         raise Exception(f"Error: {e}")
+
 
 def delete_envelope(part_id):
     try:
         conn = Config.get_fetch_connection()
         cur = conn.cursor()
-
 
         query = "DELETE from dl_envelope_fetch WHERE part_id = %s"
         cur.execute(query, (part_id,))

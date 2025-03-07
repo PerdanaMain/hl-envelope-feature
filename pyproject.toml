@@ -17,6 +17,7 @@ urllib3 = "^2.2.3"
 schedule = "^1.2.2"
 statsmodels = "^0.14.4"
 joblib = "^1.4.2"
+flask-restful = "^0.3.10"
 
 
 [build-system]

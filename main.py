@@ -7,6 +7,7 @@ from config import Config
 from model import *
 from log import print_log
 from arima import execute_arima
+from flask import Flask, request, jsonify
 import pandas as pd  # type: ignore
 import math
 import requests
@@ -14,6 +15,8 @@ import urllib3
 import time
 import pytz
 import schedule  # type: ignore
+
+app = Flask(__name__)
 
 
 def fetch(username: str, password: str, host: str, web_id: str) -> pd.DataFrame:
@@ -195,8 +198,41 @@ def index():
             time.sleep(60)
 
 
+@app.route("/fetch-envelope", methods=["GET"])
+def home():
+    try:
+        task()
+        return (
+            jsonify(
+                {
+                    "message": f"Task completed at: {datetime.now(pytz.timezone('Asia/Jakarta'))}"
+                }
+            ),
+            200,
+        )
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/calculate-feature", methods=["GET"])
+def home_feature():
+    try:
+        feature()
+        return (
+            jsonify(
+                {
+                    "message": f"Task completed at: {datetime.now(pytz.timezone('Asia/Jakarta'))}"
+                }
+            ),
+            200,
+        )
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 if __name__ == "__main__":
-    index()
+    app.run(debug=True, port=Config.PORT)
+    # index()
     # feature()
     # task()
     # predict_detail(part_id='30513c74-4f25-4543-99d7-90503e022c5c')
