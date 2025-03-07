@@ -198,6 +198,11 @@ def index():
             time.sleep(60)
 
 
+@app.route("/", methods=["GET"])
+def hai():
+    return jsonify({"message": "Welcome to the API!"})
+
+
 @app.route("/fetch-envelope", methods=["GET"])
 def home():
     try:
