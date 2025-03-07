@@ -76,7 +76,7 @@ def fetch(username: str, password: str, host: str, web_id: str) -> pd.DataFrame:
     start_date = datetime(2024, 9, 1, 0, 0, 0, 0) 
     current_date = datetime.now()
     # end_date = current_date.replace(hour=10, minute=59, second=59, microsecond=999999)
-    end_date = datetime(2025, 2, 24, 15, 0, 0, 0)
+    end_date = datetime(2025, 3, 6, 17, 0, 0, 0)
     
     dates = [
         (start_date + timedelta(days=d, hours=h)).strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
@@ -155,16 +155,16 @@ def main():
 def run_selected_part():
     try:
         config = Config()
-        # parts = get_parts()
-        parts = get_new_parts()
+        parts = get_parts()
+        # parts = get_new_parts()
         counter = 0
         
         for part in parts:
             try:
                 exists = checking_envelope_values(part[0])
-                # if exists is not None:
-                #     print(f"Data envelope sudah ada untuk part {part[3]}")
-                #     continue
+                if exists is not None:
+                    print(f"Data envelope sudah ada untuk part {part[3]}")
+                    continue
                     
                 print(f"Data envelope belum ada untuk part {part[3]}")
                 counter += 1

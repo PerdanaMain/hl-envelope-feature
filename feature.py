@@ -94,10 +94,10 @@ def undo_fetch_envelope():
         raise
 
 if __name__ == "__main__":
-    # index()
+    index()
     # undo_fetch_envelope()
     # execute_feature()
-    run_selected_part()
+    # run_selected_part()
     # delete_feature_by_selected_part()
     # parts = get_parts()
     # print(f"Fetched {len(parts)} parts")
