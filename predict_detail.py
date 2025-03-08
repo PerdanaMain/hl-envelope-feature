@@ -14,9 +14,12 @@ def checking_status(values, detail):
     upper_threshold = detail[2]
     lower_threshold = detail[3]
 
+    if upper_threshold == None or lower_threshold == None:
+        return {"datetime": None, "status": "normal", "value": values}
+
     result = []
 
-    value = float(values[3]) if values[3] is not None else 0 # nilai
+    value = float(values[3]) if values[3] is not None else 0  # nilai
     dt = values[2]  # datetime
     # print(value[1] < lower_threshold)
 
@@ -37,6 +40,9 @@ def percent_calculation(part_id, feature_id, status):
     upper_threshold = detail[2]  # fail threshold
     lower_threshold = detail[3]  # warning threshold
     one_percent_condition = detail[6]  # normal value
+
+    if upper_threshold == None or lower_threshold == None:
+        return update_percent_condition(part_id, 100, 100)
 
     current_value, data = get_current_feature_value(part_id, feature_id=feature_id)
 
@@ -66,8 +72,9 @@ def main(part_id):
     # print("detail: ", detail)
     # print("current: ", current_value)
 
-    print("menghitung status ...")
+    # print("menghitung status ...")
     result = checking_status(current_value, detail)
+    print(result)
 
     if result["status"] == "predicted failed":
         update_detail(part_id, result["status"], result["datetime"], result["value"])
@@ -82,6 +89,6 @@ def main(part_id):
 
 if __name__ == "__main__":
     # main()
-    main("d631f5a1-832b-4c76-9b70-9f47bd1e8aa9")
+    main("a8d229be-fab1-434c-ae62-23b42ee80608")
     # percent_calculation("64492e3f-8e1f-4eb4-b9ea-8a2ead652c8e", "9dcb7e40-ada7-43eb-baf4-2ed584233de7")
     # print("test command")
