@@ -8,12 +8,12 @@ from predict_detail import main as predict_detail
 def execute_feature(part_id):
     part = get_part(part_id)
 
-    data = get_envelope_values(part[0])
-    print(f"Fetched {len(data)} records for part {part[1]}")
+    # data = get_envelope_values(part[0])
+    # print(f"Fetched {len(data)} records for part {part[1]}")
 
-    df = pd.DataFrame(data, columns=["value", "datetime"])
-    signal_values = df["value"].values
-    min_indices, max_indices = find_signal_envelopes(signal_values)
+    # df = pd.DataFrame(data, columns=["value", "datetime"])
+    # signal_values = df["value"].values
+    # min_indices, max_indices = find_signal_envelopes(signal_values)
 
     # print(f"Found {len(max_indices)} maxima")
     # save_envelopes_to_db(
@@ -21,7 +21,8 @@ def execute_feature(part_id):
     # )
 
     predict_detail(part[0])
-    
+
+
 def index():
     try:
         parts = get_parts()
@@ -41,7 +42,6 @@ def run_selected_part():
         # parts = get_parts()
         parts = get_new_parts()
         counter = 0
-
 
         for part in parts:
             try:
@@ -76,22 +76,24 @@ def delete_feature_by_selected_part():
         print(f"Gagal menghapus data feature: {str(e)}")
         raise
 
+
 def undo_fetch_envelope():
     try:
         parts = get_parts()
         counter = 0
-        
+
         print("checking part prepare for deleting")
         for part in parts:
             count = get_count_envelope(part_id=part[0])
-            if count[0] < 30 :
+            if count[0] < 30:
                 delete_envelope(part_id=part[0])
                 counter += 1
-        
+
         print("total deleted part in envelope: ", counter)
     except Exception as e:
         print(f"Gagal menghapus data feature: {str(e)}")
         raise
+
 
 if __name__ == "__main__":
     index()

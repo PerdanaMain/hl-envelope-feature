@@ -17,6 +17,9 @@ def checking_status(values, detail):
     if upper_threshold == None or lower_threshold == None:
         return {"datetime": None, "status": "normal", "value": values}
 
+    if len(values) < 50:
+        return {"datetime": None, "status": "normal", "value": values}
+
     result = []
 
     value = float(values[3]) if values[3] is not None else 0  # nilai
@@ -70,11 +73,11 @@ def main(part_id):
     features_id = "9dcb7e40-ada7-43eb-baf4-2ed584233de7"
     value, current_value = get_current_feature_value(part_id, features_id)
     # print("detail: ", detail)
-    # print("current: ", current_value)
+    # print("current: ", len(current_value))
 
     # print("menghitung status ...")
     result = checking_status(current_value, detail)
-    print(result)
+    # print(result)
 
     if result["status"] == "predicted failed":
         update_detail(part_id, result["status"], result["datetime"], result["value"])
@@ -89,6 +92,6 @@ def main(part_id):
 
 if __name__ == "__main__":
     # main()
-    main("a8d229be-fab1-434c-ae62-23b42ee80608")
+    main("e0c14309-6ea2-4a0f-8ab4-733be05319b9")
     # percent_calculation("64492e3f-8e1f-4eb4-b9ea-8a2ead652c8e", "9dcb7e40-ada7-43eb-baf4-2ed584233de7")
     # print("test command")
