@@ -25,8 +25,8 @@ def execute_feature(part_id):
 
 def index():
     try:
-        # parts = get_parts()
-        parts = get_non_dcs()
+        parts = get_parts()
+        # parts = get_non_dcs()
         for part in parts:
             try:
                 execute_feature(part[0])
