@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Dict, Optional
 from config import Config
 from format_gmt import format_to_gmt
-from model import get_new_parts, get_parts, create_envelope, checking_envelope_values
+from model import get_new_parts, get_parts, create_envelope, checking_envelope_values, get_part
 
 
 def fetch_single_value(params: Dict) -> Optional[Dict]:
@@ -76,7 +76,7 @@ def fetch(username: str, password: str, host: str, web_id: str) -> pd.DataFrame:
     start_date = datetime(2024, 9, 1, 0, 0, 0, 0) 
     current_date = datetime.now()
     # end_date = current_date.replace(hour=10, minute=59, second=59, microsecond=999999)
-    end_date = datetime(2025, 3, 6, 17, 0, 0, 0)
+    end_date = datetime(2025, 3, 18, 14, 0, 0, 0)
     
     dates = [
         (start_date + timedelta(days=d, hours=h)).strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
@@ -193,7 +193,43 @@ def run_selected_part():
         print(f"Gagal menginisialisasi: {str(e)}")
         raise
     
+def run_single_part(part_id):
+    try:
+        config = Config()
+        part = get_part(part_id)
+        print(part)
+        
+        if part is None:
+            print(f"Part dengan ID {part_id} tidak ditemukan")
+            return
+        
+        exists = checking_envelope_values(part[0])
+        if exists is not None:
+            print(f"Data envelope sudah ada untuk part {part[1]}")
+            return
+            
+        print(f"Data envelope belum ada untuk part {part[1]}")
+        
+        data = fetch(
+            config.PIWEB_API_USER,
+            config.PIWEB_API_PASS,
+            config.PIWEB_API_URL,
+            part[2]
+        )
+        
+        if data.empty:
+            print(f"No data fetched for part {part[1]}")
+            return
+
+        print(f"Fetched {len(data)} records for part {part[1]}")
+        create_envelope(data, part[0])
+        
+    except Exception as e:
+        print(f"Gagal memproses part: {str(e)}")
+        return
+    
 if __name__ == "__main__":
-    run_selected_part()
+    run_single_part('28516795-f22d-4cbc-9469-b720f5d881d7')
+    # run_selected_part()
     # main()
     # pass

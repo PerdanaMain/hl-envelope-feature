@@ -7,20 +7,21 @@ from predict_detail import main as predict_detail
 
 def execute_feature(part_id):
     part = get_part(part_id)
+    print(part)
 
-    # data = get_envelope_values(part[0])
-    # print(f"Fetched {len(data)} records for part {part[1]}")
+    data = get_envelope_values(part[0])
+    print(f"Fetched {len(data)} records for part {part[1]}")
 
-    # df = pd.DataFrame(data, columns=["value", "datetime"])
-    # signal_values = df["value"].values
-    # min_indices, max_indices = find_signal_envelopes(signal_values)
+    df = pd.DataFrame(data, columns=["value", "datetime"])
+    signal_values = df["value"].values
+    min_indices, max_indices = find_signal_envelopes(signal_values)
 
-    # print(f"Found {len(max_indices)} maxima")
-    # save_envelopes_to_db(
-    #     part[0], df, max_indices, features_id="9dcb7e40-ada7-43eb-baf4-2ed584233de7"
-    # )
+    print(f"Found {len(max_indices)} maxima")
+    save_envelopes_to_db(
+        part[0], df, max_indices, features_id="9dcb7e40-ada7-43eb-baf4-2ed584233de7"
+    )
 
-    predict_detail(part[0])
+    # predict_detail(part[0])
 
 
 def index():
@@ -36,6 +37,12 @@ def index():
     except Exception as e:
         print(f"Failed to fetch data: {str(e)}, part: {part[3]}")
 
+
+def run_single_part(part_id):
+    try:
+        execute_feature(part_id)
+    except Exception as e:
+        print(f"Failed to fetch data: {str(e)}")
 
 def run_selected_part():
     try:
@@ -97,7 +104,8 @@ def undo_fetch_envelope():
 
 
 if __name__ == "__main__":
-    index()
+    # index()
+    run_single_part('28516795-f22d-4cbc-9469-b720f5d881d7')
     # undo_fetch_envelope()
     # execute_feature()
     # run_selected_part()

@@ -67,7 +67,7 @@ def get_part(part_id):
         conn = Config.get_connection()
         cur = conn.cursor()
 
-        query = "SELECT id, part_name FROM pf_parts WHERE id = %s "
+        query = "SELECT id, part_name, web_id FROM pf_parts WHERE id = %s "
         cur.execute(query, (part_id,))
         parts = cur.fetchone()
         return parts
