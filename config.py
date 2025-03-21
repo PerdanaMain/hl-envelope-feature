@@ -23,6 +23,9 @@ class Config:
     DB_NAME = os.getenv("DB_NAME")
     DB_PORT = os.getenv("DB_PORT")
 
+    # URL WSDL
+    wsdl_url = "http://172.16.3.40:9080/meaweb/wsdl/MX-DT_CXWOQuery.wsdl"
+
     def get_connection():
         try:
             conn = psycopg2.connect(

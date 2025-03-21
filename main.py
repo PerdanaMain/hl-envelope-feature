@@ -16,6 +16,12 @@ import time
 import pytz
 import schedule  # type: ignore
 
+# maximo wdsl fetch dependencies
+from zeep import Client
+from zeep.transports import Transport
+from requests import Session
+from zeep.plugins import HistoryPlugin
+
 app = Flask(__name__)
 
 
@@ -83,6 +89,176 @@ def fetch(username: str, password: str, host: str, web_id: str) -> pd.DataFrame:
         print_log(f"Error fetching data for {web_id} at {timestamp}: {e}")
         return pd.DataFrame()
 
+# Fungsi untuk mengambil nilai dari objek Zeep yang kompleks
+def extract_value(field):
+    """Mengambil nilai dari objek Zeep dengan memastikan hanya nilai murni yang diambil."""
+    if field is None:
+        return None
+    
+    try:
+        if hasattr(field, "_value_1"):
+            return field._value_1
+        elif isinstance(field, dict) and "_value_1" in field:
+            return field["_value_1"]
+        return field
+    except (AttributeError, TypeError, KeyError):
+        return None
+
+# Fungsi untuk menghapus timezone dari datetime
+def remove_timezone(date_str):
+    """Menghapus informasi timezone dari format datetime."""
+    if date_str is None:
+        return None
+        
+    try:
+        dt = pd.to_datetime(date_str)
+        return dt.replace(tzinfo=None)
+    except Exception:
+        # Fix typo from date_st to date_str
+        return date_str
+
+def extract_maximo():
+    try:
+        current_time = datetime.now(pytz.timezone("Asia/Jakarta"))
+        print(f"Extract Maximo running at: {current_time}")
+        print_log(f"Extract Maximo running at: {current_time}")
+
+        config = Config()
+
+        # Definisi variabel tanggal format: YYYY-MM-DD
+        # start_date = "2019-01-01"
+        # end_date = "2019-03-31"
+
+        metadata = get_metadata_maximo_etl()
+
+        if not metadata:
+            start_date_str = "2019-01-01"
+            start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
+            end_date = start_date + timedelta(weeks=1)
+            end_date_str = end_date.strftime("%Y-%m-%d")
+        else:
+            start_date = metadata
+            end_date = start_date + timedelta(weeks=1)
+            start_date_str = start_date.strftime("%Y-%m-%d")
+            end_date_str = end_date.strftime("%Y-%m-%d")
+        
+        # Membuat body request SOAP dengan format string yang benar
+        query_params = {
+            "CXWOQuery": {
+                "WHERE": f"((WORKORDER.REPORTDATE < '{end_date_str}' " # f"WORKORDER.STATUS = 'COMP' AND "
+                        f"AND WORKORDER.REPORTDATE > '{start_date_str}') "
+                        f"OR (WORKORDER.STATUSDATE < '{end_date_str}' "
+                        f"AND WORKORDER.STATUSDATE > '{start_date_str}')) "
+                        "ORDER BY WORKORDER.STATUSDATE DESC",
+                "WORKORDER": {}
+            }
+        }
+
+        # URL WSDL
+        wsdl_url = "http://172.16.3.40:9080/meaweb/wsdl/MX-DT_CXWOQuery.wsdl"
+
+        # Base64-encoded credentials
+        maxauth_token = "bWF4YWRtaW46cjM1N3IxYzczZDM0"
+
+        # Inisialisasi sesi dengan autentikasi menggunakan header "maxauth"
+        session = Session()
+        session.headers.update({
+            "maxauth": maxauth_token,
+            "Content-Type": "text/xml; charset=utf-8",
+        })
+
+        transport = Transport(session=session)
+        history = HistoryPlugin()
+
+        # Inisialisasi klien SOAP
+        client = Client(wsdl_url, transport=transport, plugins=[history])
+
+        print("Fetching Maximo...")
+        print_log("Fetching Maximo...")
+        # Memanggil API SOAP
+        try:
+            response = client.service.QueryCXWO(**query_params)
+
+            # Debugging: Cetak response untuk memastikan ada data
+            # print("Response dari API:")
+            # print(response[0])
+
+            # Pastikan `CXWOSet` ada sebelum mengakses `WORKORDER`
+            if not response or not hasattr(response, "CXWOSet") or response.CXWOSet is None:
+                print("Tidak ada data yang ditemukan dalam response.")
+                exit()
+
+            workorders = response.CXWOSet.WORKORDER if hasattr(response.CXWOSet, "WORKORDER") else []
+
+            # Jika tidak ada workorder
+            if not workorders:
+                print("Tidak ada data WORKORDER yang ditemukan.")
+                exit()
+
+            # Tampilkan jumlah data yang ditemukan
+            total_records = len(workorders)
+            print(f"Found {total_records} work orders in response")
+            print_log(f"Found {total_records} work orders in response")
+
+            # Menyiapkan data untuk DataFrame pandas
+            data = []
+            for i, wo in enumerate(workorders):
+                # Print progress every 100 records
+                if i % 100 == 0 or i == total_records - 1:
+                    progress_pct = (i + 1) / total_records * 100
+                    print(f"Processing {i+1}/{total_records} records ({progress_pct:.1f}%)")
+                    print_log(f"Processing {i+1}/{total_records} records ({progress_pct:.1f}%)")
+
+                data.append({
+                    "WONUM": extract_value(wo.WONUM),
+                    "WORKTYPE": extract_value(wo.WORKTYPE),
+                    "ASSETNUM": extract_value(wo.ASSETNUM),
+                    "SITEID": extract_value(wo.SITEID),
+                    "STATUS": extract_value(wo.STATUS),
+                    "STATUSDATE": remove_timezone(extract_value(wo.STATUSDATE)),
+                    "REPORTDATE": remove_timezone(extract_value(wo.REPORTDATE)),
+                    "ACTMATCOST": extract_value(wo.ACTMATCOST),
+                    "ACTSERVCOST": extract_value(wo.ACTSERVCOST),
+                    "ACTSTART": remove_timezone(extract_value(wo.ACTSTART)),  # Tambahan
+                    "ACTFINISH": remove_timezone(extract_value(wo.ACTFINISH)),  # Tambahan
+                    "TARGSTARTDATE": remove_timezone(extract_value(wo.TARGSTARTDATE)),
+                    "TARGCOMPDATE": remove_timezone(extract_value(wo.TARGCOMPDATE)),
+                    "WOGROUP": extract_value(wo.WOGROUP),
+                    "WOJP8": extract_value(wo.WOJP8),
+                    # "STATUSIFACE": extract_value(wo.STATUSIFACE),  # Tambahan
+                    # "DESCRIPTION_LONGDESCRIPTION": extract_value(wo.DESCRIPTION_LONGDESCRIPTION),  # Tambahan
+                    # "FCPROJECTID": extract_value(wo.FCPROJECTID),  # Tambahan
+                    # "FCTASKID": extract_value(wo.FCTASKID),  # Tambahan
+                    # "NP_STATUSMEMO": extract_value(wo.NP_STATUSMEMO)  # Tambahan
+                })
+        
+            # Membuat DataFrame pandas
+            df = pd.DataFrame(data)
+
+            # Simpan ke file Excel
+            # file_path = "hasil.xlsx"
+            # df.to_excel(file_path, index=False, engine="openpyxl")
+            
+            # Simpan ke database collector
+            save_maximo_to_db(df, start_date, end_date)
+
+            # save_maximo_metadata_etl_to_db(start_date, end_date, len(df))
+
+            # print(f"Data berhasil disimpan ke {file_path}")
+            print(f"Data berhasil disimpan ke database collector")
+            print(f"Task Extract Maximo completed at: {datetime.now(pytz.timezone('Asia/Jakarta'))}")
+            print_log(f"Task Extract Maximo completed at: {datetime.now(pytz.timezone('Asia/Jakarta'))}")
+
+            return f"Maximo Data Extracted: {len(df)}"
+        
+        except Exception as e:
+            print(f"Error executing task: {e}")
+            print_log(f"Error executing task: {e}")
+
+    except Exception as e:
+        print(f"Error executing task: {e}")
+        print_log(f"Error executing task: {e}")
+          
 
 def task():
     try:
@@ -202,6 +378,20 @@ def index():
 def hai():
     return jsonify({"message": "Welcome to the API!"})
 
+@app.route("/fetch-maximo", methods=["GET"])
+def home_maximo():
+    try:
+        maximo_data = extract_maximo()
+        return (
+            jsonify(
+                {
+                    "message": f"{maximo_data} at: {datetime.now(pytz.timezone('Asia/Jakarta'))}"
+                }
+            ),
+            200,
+        )
+    except Exception as e:
+        return jsonify({"maximo route error": str(e)}), 500
 
 @app.route("/fetch-envelope", methods=["GET"])
 def home():
@@ -241,3 +431,4 @@ if __name__ == "__main__":
     # feature()
     # task()
     # predict_detail(part_id='30513c74-4f25-4543-99d7-90503e022c5c')
+    # extract_maximo()

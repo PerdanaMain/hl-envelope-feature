@@ -2,3 +2,8 @@ env/
 .env
 __pycache__/
 logs/
+
+venv/
+.venv
+/venv
+venv
